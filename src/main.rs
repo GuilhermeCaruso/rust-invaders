@@ -1,6 +1,6 @@
 mod game;
 
-use std::time::Duration;
+use std::{collections::HashSet, time::Duration};
 
 use game::{
     context::{GameContext, PlayerDirection},
@@ -29,23 +29,50 @@ pub fn main() -> Result<(), String> {
 
     let mut frame_counter: i32 = 0;
 
+    let mut enemy_speed: i32 = 15;
+    let mut enemy_tick: i32 = 0;
+    let mut key_pressed: HashSet<Keycode> = HashSet::new();
+
     'game_loop: loop {
         for e in events.poll_iter() {
             match e {
-                Event::Quit { .. } => break 'game_loop,
+                Event::Quit { .. } => {
+                    break 'game_loop;
+                }
                 Event::KeyDown {
-                    keycode: Some(keycode),
+                    keycode: Some(key),
+                    repeat: false,
                     ..
-                } => match keycode {
-                    Keycode::D => context.move_player(PlayerDirection::Right),
-                    Keycode::A => context.move_player(PlayerDirection::Left),
-                    _ => {}
-                },
+                } => {
+                    key_pressed.insert(key);
+                }
+                Event::KeyUp {
+                    keycode: Some(key),
+                    repeat: false,
+                    ..
+                } => {
+                    key_pressed.remove(&key);
+                }
                 _ => {}
             }
         }
 
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 144));
+        if key_pressed.contains(&Keycode::D) {
+            context.move_player(PlayerDirection::Right)
+        }
+
+        // Verificar se a tecla "A" está pressionada
+        if key_pressed.contains(&Keycode::A) {
+            context.move_player(PlayerDirection::Left)
+        }
+
+        enemy_tick += 1;
+        if enemy_speed < enemy_tick {
+            enemy_tick = 0;
+            context.move_enemies();
+        }
+
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
         frame_counter += 1;
 
         if frame_counter % 10 == 0 {

@@ -22,10 +22,15 @@ impl Renderer {
     pub fn draw(&mut self, context: &GameContext) -> Result<(), String> {
         self.canvas.set_draw_color(Color::BLACK);
         self.canvas.clear();
+        self.canvas.set_draw_color(Color::BLUE);
 
+        for enemy in context.enemies.iter() {
+            self.dot(enemy)?
+        }
         self.canvas.set_draw_color(Color::RED);
 
         self.dot(&context.player_position)?;
+
         self.canvas.present();
         Ok(())
     }
